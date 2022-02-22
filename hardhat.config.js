@@ -9,7 +9,7 @@ module.exports = {
 		hardhat: {
 			chainId: 1337,
 		},
-		mainnet: {},
+		// mainnet: {},
 		mumbai: {
 			url: API_URL,
 			accounts: [PRIVATE_KEY],
