@@ -61,7 +61,6 @@ const CreateItem = () => {
 		const NFTContract = new ethers.Contract(nftAddress, NFT.abi, signer);
 		let transaction = await NFTContract.createToken(url);
 		const tx = await transaction.wait();
-		console.log('Events----', tx.events);
 		const event = tx.events[0];
 		let value = event.args[2];
 		let tokenId = value.toNumber();
