@@ -10,10 +10,24 @@ async function main() {
 	const nft = await NFT.deploy(nftMarket.address);
 	await nft.deployed();
 	console.log('NFT address is : ', nft.address);
+	saveFrontendFiles(nftMarket.address, nft.address);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
+function saveFrontendFiles(marketAddress, nftAddress) {
+	const fs = require('fs');
+
+	const contractsDir = __dirname + '/../';
+
+	fs.writeFileSync(
+		contractsDir + '/contract-address.json',
+		JSON.stringify(
+			{ marketAddress: marketAddress, nftAddress: nftAddress },
+			undefined,
+			2
+		)
+	);
+}
+
 main()
 	.then(() => process.exit(0))
 	.catch((error) => {

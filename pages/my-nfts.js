@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import React, { useEffect, useState } from 'react';
 import Web3Modal from 'web3modal';
-import { marketAddress, nftAddress } from '../config';
+import contractAddress from '../contract-address.json';
 import Market from '../artifacts/contracts/NFTMarket.sol/NFTMarket.json';
 import NFT from '../artifacts/contracts/NFT.sol/NFT.json';
 import axios from 'axios';
@@ -19,11 +19,15 @@ const MyNFTs = () => {
 		const signer = provider.getSigner();
 
 		const MarketContract = new ethers.Contract(
-			marketAddress,
+			contractAddress.marketAddress,
 			Market.abi,
 			signer
 		);
-		const TokenContract = new ethers.Contract(nftAddress, NFT.abi, signer);
+		const TokenContract = new ethers.Contract(
+			contractAddress.nftAddress,
+			NFT.abi,
+			signer
+		);
 
 		const data = await MarketContract.fetchMyNFTs();
 
@@ -40,6 +44,7 @@ const MyNFTs = () => {
 					image: meta.data.image,
 					name: meta.data.name,
 					description: meta.data.description,
+					tokenURI,
 				};
 				return item;
 			})

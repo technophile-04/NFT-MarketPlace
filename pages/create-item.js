@@ -1,11 +1,12 @@
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { create as ipfsHttpClient } from 'ipfs-http-client';
-import { nftAddress, marketAddress } from '../config';
+import contractAddress from '../contract-address.json';
 import NFT from '../artifacts/contracts/NFT.sol/NFT.json';
 import Market from '../artifacts/contracts/NFTMarket.sol/NFTMarket.json';
 import Web3Modal from 'web3modal';
 import { ethers } from 'ethers';
+import toast from 'react-hot-toast';
 
 const client = ipfsHttpClient('https://ipfs.infura.io:5001/api/v0');
 
@@ -16,17 +17,23 @@ const CreateItem = () => {
 		name: '',
 		description: '',
 	});
+	const [loading, setLoading] = useState(false);
 	const router = useRouter();
 
 	const onChange = async (e) => {
 		const file = e.target.files[0];
 		try {
-			const added = await client.add(file, {
-				progress: (prog) => console.log(`received: ${prog}`),
+			setLoading(true);
+			const added = await toast.promise(client.add(file), {
+				loading: 'Uploading image ipfs',
+				success: 'Successfully Uploaded to ipfs!',
+				error: 'Error uploading please try again in 2min',
 			});
+
 			const url = `https://ipfs.infura.io/ipfs/${added.path}`;
 			console.log('url--', url);
 			setFileUrl(url);
+			setLoading(false);
 		} catch (error) {
 			console.log('Error uploading file: ', error);
 		}
@@ -43,12 +50,18 @@ const CreateItem = () => {
 		});
 
 		try {
-			const added = await client.add(data);
+			setLoading(true);
+			const added = await toast.promise(client.add(data), {
+				loading: 'Uploading  meta data to ipfs',
+				success: 'Successfully Uploaded to ipfs!',
+				error: 'Error uploading please try again in 2min',
+			});
 			const url = `https://ipfs.infura.io/ipfs/${added.path}`;
 
 			createSale(url);
 		} catch (error) {
 			console.log('Error uploading file: ', error);
+			setLoading(false);
 		}
 	};
 
@@ -58,31 +71,70 @@ const CreateItem = () => {
 		const provider = new ethers.providers.Web3Provider(connection);
 		const signer = provider.getSigner();
 
-		const NFTContract = new ethers.Contract(nftAddress, NFT.abi, signer);
-		let transaction = await NFTContract.createToken(url);
-		const tx = await transaction.wait();
+		const NFTContract = new ethers.Contract(
+			contractAddress.nftAddress,
+			NFT.abi,
+			signer
+		);
+
+		let transaction = await toast.promise(
+			NFTContract.createToken(url),
+			{
+				loading: 'Minting NFT',
+				success: 'NFT Minted',
+				error: 'Error creating NFT',
+			},
+			{
+				success: {
+					icon: '🔥',
+				},
+			}
+		);
+		let tx = await toast.promise(transaction.wait(), {
+			loading: 'Minning transaction, Hold tight!',
+			success: 'Minned successfully !',
+			error: 'please wait 5 min and try again',
+		});
 		const event = tx.events[0];
 		let value = event.args[2];
 		let tokenId = value.toNumber();
 		const price = ethers.utils.parseUnits(formInput.price, 'ether');
 
 		const MarketContract = new ethers.Contract(
-			marketAddress,
+			contractAddress.marketAddress,
 			Market.abi,
 			signer
 		);
 		let listingPrice = await MarketContract.getListingPrice();
 		listingPrice = listingPrice.toString();
-		transaction = await MarketContract.createMarketItem(
-			nftAddress,
-			tokenId,
-			price,
+
+		transaction = await toast.promise(
+			MarketContract.createMarketItem(
+				contractAddress.nftAddress,
+				tokenId,
+				price,
+				{
+					value: listingPrice,
+				}
+			),
 			{
-				value: listingPrice,
+				loading: 'Listing your NFT',
+				success: 'Your NFT is Listed!',
+				error: 'please wait 5 min and try again',
+			},
+			{
+				success: {
+					icon: '🔥',
+				},
 			}
 		);
-		await transaction.wait();
 
+		await toast.promise(transaction.wait(), {
+			loading: 'Minning transaction, Hold tight!',
+			success: 'Minned successfully !',
+			error: 'please wait 5 min and try again',
+		});
+		setLoading(false);
 		router.push('/');
 	};
 
@@ -112,7 +164,10 @@ const CreateItem = () => {
 				{fileUrl && <img className="rounded mt-4" width="350" src={fileUrl} />}
 				<button
 					onClick={createMarket}
-					className="font-bold mt-4 bg-pink-500 text-white rounded p-4 shadow-lg"
+					disabled={loading}
+					className={`font-bold mt-4 bg-pink-500 text-white rounded p-4 shadow-lg ${
+						loading && 'disabled:opacity-75'
+					}`}
 				>
 					Create Digital Asset
 				</button>
