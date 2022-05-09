@@ -15,7 +15,7 @@ export default function Home() {
 
 	async function loadNFTs() {
 		if (!window.ethereum) return;
-
+		setLoading('loading');
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
 		const tokenContract = new ethers.Contract(
 			contractAddress.nftAddress,
@@ -114,6 +114,9 @@ export default function Home() {
 
 	if (loading === 'loaded' && !nfts.length) {
 		return <h1 className="px-20 py-10 text-3xl">No items in marketplace</h1>;
+	}
+	if (loading === 'loading' && !nfts.length) {
+		return <h1 className="px-20 py-10 text-3xl">Loading...</h1>;
 	}
 
 	return (
