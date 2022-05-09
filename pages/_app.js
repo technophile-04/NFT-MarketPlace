@@ -1,10 +1,15 @@
 import '../styles/globals.css';
 import Link from 'next/link';
 import { Toaster } from 'react-hot-toast';
+import Head from 'next/head';
 
 function MyApp({ Component, pageProps }) {
 	return (
 		<div>
+			<Head>
+				<meta charSet="utf-8" />
+				<title>NFT MarketPlace</title>
+			</Head>
 			<Toaster />
 			<nav className="border-b p-6">
 				<p className="text-4xl font-bold">NFT Marketplace</p>
